@@ -1,0 +1,150 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Mountain Climber Upgrade Game</title>
+    <style>
+        body { margin: 0; background: #1a1a2e; color: #fff; font-family: sans-serif; display: flex; justify-content: center; align-items: center; height: 100vh; }
+        #gameContainer { display: flex; gap: 20px; background: #16213e; padding: 20px; border-radius: 10px; }
+        canvas { background: #0f3460; border-radius: 5px; }
+        #panel { width: 250px; display: flex; flex-direction: column; gap: 15px; }
+        .btn { background: #e94560; color: white; border: none; padding: 10px; border-radius: 5px; cursor: pointer; font-weight: bold; }
+        .btn:disabled { background: #555; cursor: not-allowed; }
+        .stat { font-size: 14px; }
+        progress { width: 100%; height: 15px; }
+    </style>
+</head>
+<body>
+    <div id="gameContainer">
+        <canvas id="canvas" width="300" height="500"></canvas>
+        <div id="panel">
+            <h2>Mountain Climber</h2>
+            <div class="stat">Current Height: <b id="height">0</b>m</div>
+            <div class="stat">Max Height: <b id="maxHeight">0</b>m</div>
+            <div class="stat">Coins: <b id="coins">0</b></div>
+            
+            <label>Stamina:</label>
+            <progress id="staminaBar" value="100" max="100"></progress>
+            
+            <button class="btn" id="climbBtn" onclick="climb()">CLIMB! (Space)</button>
+            <hr>
+            <button class="btn" id="upgStrength" onclick="buyStrength()">Upgrade Strength (+Height/Climb)<br>Cost: <span id="strCost">10</span></button>
+            <button class="btn" id="upgStamina" onclick="buyStamina()">Upgrade Max Stamina<br>Cost: <span id="staCost">15</span></button>
+            <button class="btn" id="restBtn" onclick="rest()">Rest / Reset Height</button>
+        </div>
+    </div>
+
+<script>
+const canvas = document.getElementById('canvas');
+const ctx = canvas.getContext('2d');
+
+let height = 0;
+let maxHeight = 0;
+let coins = 0;
+
+let strength = 1;
+let stamina = 100;
+let maxStamina = 100;
+
+let strCost = 10;
+let staCost = 15;
+
+window.addEventListener('keydown', e => {
+    if (e.code === 'Space') climb();
+});
+
+function climb() {
+    if (stamina >= 5) {
+        stamina -= 5;
+        let gained = strength;
+        height += gained;
+        
+        // Earn coins based on progression
+        if (height > maxHeight) {
+            coins += Math.floor(height - maxHeight) * 2;
+            maxHeight = height;
+        }
+        updateUI();
+    }
+}
+
+function rest() {
+    stamina = maxStamina;
+    height = 0;
+    updateUI();
+}
+
+function buyStrength() {
+    if (coins >= strCost) {
+        coins -= strCost;
+        strength += 1;
+        strCost = Math.floor(strCost * 1.5);
+        updateUI();
+    }
+}
+
+function buyStamina() {
+    if (coins >= staCost) {
+        coins -= staCost;
+        maxStamina += 25;
+        stamina = maxStamina;
+        staCost = Math.floor(staCost * 1.6);
+        updateUI();
+    }
+}
+
+function updateUI() {
+    document.getElementById('height').innerText = Math.floor(height);
+    document.getElementById('maxHeight').innerText = Math.floor(maxHeight);
+    document.getElementById('coins').innerText = coins;
+    document.getElementById('strCost').innerText = strCost;
+    document.getElementById('staCost').innerText = staCost;
+    
+    const staminaBar = document.getElementById('staminaBar');
+    staminaBar.value = stamina;
+    staminaBar.max = maxStamina;
+
+    document.getElementById('upgStrength').disabled = coins < strCost;
+    document.getElementById('upgStamina').disabled = coins < staCost;
+}
+
+// Stamina Auto-Regen
+setInterval(() => {
+    if (stamina < maxStamina) {
+        stamina = Math.min(maxStamina, stamina + 2);
+        updateUI();
+    }
+}, 500);
+
+function draw() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Mountain background shifting with height
+    ctx.fillStyle = '#1b1b2f';
+    ctx.beginPath();
+    ctx.moveTo(0, 500);
+    ctx.lineTo(150, 50 - (height % 100));
+    ctx.lineTo(300, 500);
+    ctx.fill();
+
+    // Climber figure
+    let climberY = Math.max(100, 450 - (height * 2));
+    if (climberY < 100) climberY = 100; // Keep in frame
+
+    ctx.fillStyle = '#e94560';
+    ctx.beginPath();
+    ctx.arc(150, climberY, 12, 0, Math.PI * 2);
+    ctx.fill();
+
+    // Flag pole at top height milestone
+    ctx.fillStyle = '#f1c40f';
+    ctx.fillRect(180, climberY - 20, 5, 40);
+
+    requestAnimationFrame(draw);
+}
+
+updateUI();
+draw();
+</script>
+</body>
+</html>

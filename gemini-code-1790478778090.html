@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Infinite Adaptive Bot Racing</title>
+    <style>
+        body { margin: 0; background: #111; color: #fff; font-family: sans-serif; display: flex; flex-direction: column; align-items: center; justify-content: center; height: 100vh; }
+        canvas { background: #222; border: 3px solid #555; }
+        #hud { margin-top: 10px; font-size: 18px; display: flex; gap: 20px; }
+    </style>
+</head>
+<body>
+    <canvas id="gameCanvas" width="600" height="600"></canvas>
+    <div id="hud">
+        <div>Player Laps: <span id="playerLaps">0</span></div>
+        <div>Bot Laps: <span id="botLaps">0</span></div>
+        <div>Bot Level: <span id="botLevel">1</span></div>
+    </div>
+
+<script>
+const canvas = document.getElementById('gameCanvas');
+const ctx = canvas.getContext('2d');
+
+const trackCenter = { x: 300, y: 300 };
+const trackRadius = 200;
+const trackWidth = 80;
+
+let keys = {};
+window.addEventListener('keydown', e => keys[e.key] = true);
+window.addEventListener('keyup', e => keys[e.key] = false);
+
+class Car {
+    constructor(x, y, color, isBot = false) {
+        this.x = x;
+        this.y = y;
+        this.angle = -Math.PI / 2;
+        this.speed = 0;
+        this.maxSpeed = 3.5;
+        this.accel = 0.1;
+        this.friction = 0.03;
+        this.color = color;
+        this.isBot = isBot;
+        this.laps = 0;
+        this.checkpointPassed = false;
+        
+        // Bot adaptation params
+        this.botLevel = 1;
+        this.botTargetAngle = 0;
+    }
+
+    update() {
+        if (!this.isBot) {
+            if (keys['ArrowUp'] || keys['w']) this.speed = Math.min(this.speed + this.accel, this.maxSpeed);
+            if (keys['ArrowDown'] || keys['s']) this.speed = Math.max(this.speed - this.accel, -this.maxSpeed / 2);
+            if (keys['ArrowLeft'] || keys['a']) this.angle -= 0.05 * (this.speed / this.maxSpeed);
+            if (keys['ArrowRight'] || keys['d']) this.angle += 0.05 * (this.speed / this.maxSpeed);
+        } else {
+            // Bot Logic: Drive along the circular track
+            let currentDist = Math.hypot(this.x - trackCenter.x, this.y - trackCenter.y);
+            let currentAngle = Math.atan2(this.y - trackCenter.y, this.x - trackCenter.x);
+            
+            // Target point slightly ahead along the circle radius
+            let targetRadAngle = currentAngle + 0.3;
+            let targetX = trackCenter.x + Math.cos(targetRadAngle) * trackRadius;
+            let targetY = trackCenter.y + Math.sin(targetRadAngle) * trackRadius;
+            
+            let desiredAngle = Math.atan2(targetY - this.y, targetX - this.x);
+            let diff = desiredAngle - this.angle;
+            
+            while (diff < -Math.PI) diff += Math.PI * 2;
+            while (diff > Math.PI) diff -= Math.PI * 2;
+            
+            // Steer toward target with accuracy relative to bot level
+            let turnRate = Math.min(0.03 + (this.botLevel * 0.005), 0.1);
+            this.angle += Math.sign(diff) * Math.min(Math.abs(diff), turnRate);
+            
+            // Drive forward continuously
+            this.speed = Math.min(this.speed + this.accel, this.maxSpeed);
+        }
+
+        // Physics movement
+        this.speed *= (1 - this.friction);
+        this.x += Math.cos(this.angle) * this.speed;
+        this.y += Math.sin(this.angle) * this.speed;
+
+        // Lap and Checkpoint Detection (Finish line is x: 300, y: 100-180)
+        if (this.x > 280 && this.x < 320 && this.y > 420) {
+            this.checkpointPassed = true;
+        }
+        if (this.checkpointPassed && this.x > 280 && this.x < 320 && this.y < 180) {
+            this.laps++;
+            this.checkpointPassed = false;
+            
+            if (this.isBot) {
+                this.adaptBot();
+            } else {
+                // If player completes a lap, boost bot standard as well
+                bot.adaptBot();
+            }
+        }
+    }
+
+    adaptBot() {
+        this.botLevel++;
+        this.maxSpeed += 0.25; // Speed scales infinitely
+        this.accel += 0.015;
+        document.getElementById('botLevel').innerText = this.botLevel;
+    }
+
+    draw() {
+        ctx.save();
+        ctx.translate(this.x, this.y);
+        ctx.rotate(this.angle);
+        ctx.fillStyle = this.color;
+        ctx.fillRect(-12, -7, 24, 14);
+        ctx.restore();
+    }
+}
+
+const player = new Car(300, 120, '#3498db');
+const bot = new Car(300, 140, '#e74c3c', true);
+
+function gameLoop() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+
+    // Draw Track
+    ctx.beginPath();
+    ctx.arc(trackCenter.x, trackCenter.y, trackRadius + trackWidth/2, 0, Math.PI * 2);
+    ctx.fillStyle = '#444';
+    ctx.fill();
+
+    ctx.beginPath();
+    ctx.arc(trackCenter.x, trackCenter.y, trackRadius - trackWidth/2, 0, Math.PI * 2);
+    ctx.fillStyle = '#222';
+    ctx.fill();
+
+    // Finish Line
+    ctx.strokeStyle = '#fff';
+    ctx.lineWidth = 4;
+    ctx.beginPath();
+    ctx.moveTo(300, 100);
+    ctx.lineTo(300, 180);
+    ctx.stroke();
+
+    // Update and Draw
+    player.update();
+    bot.update();
+
+    player.draw();
+    bot.draw();
+
+    document.getElementById('playerLaps').innerText = player.laps;
+    document.getElementById('botLaps').innerText = bot.laps;
+
+    requestAnimationFrame(gameLoop);
+}
+
+gameLoop();
+</script>
+</body>
+</html>
