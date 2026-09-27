@@ -1,0 +1,81 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Learning Hub - Interactive Games</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            background-color: #f4f6f9;
+            color: #333;
+            margin: 0;
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        header {
+            text-align: center;
+            margin-bottom: 30px;
+        }
+        h1 {
+            color: #2c3e50;
+        }
+        .container {
+            max-width: 800px;
+            width: 100%;
+            background: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+        .game-card {
+            border: 1px solid #e0e0e0;
+            padding: 15px;
+            margin-bottom: 15px;
+            border-radius: 5px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        .btn {
+            background-color: #3498db;
+            color: white;
+            padding: 10px 15px;
+            text-decoration: none;
+            border-radius: 4px;
+            font-weight: bold;
+        }
+        .btn:hover {
+            background-color: #2980b9;
+        }
+    </style>
+</head>
+<body>
+
+    <header>
+        <h1>Learning Hub</h1>
+        <p>Interactive web games and projects.</p>
+    </header>
+
+    <div class="container">
+        <div class="game-card">
+            <div>
+                <h3>Adaptive Bot Racing</h3>
+                <p>A racing game where the opponent gets faster every lap.</p>
+            </div>
+            <a href="racing.html" class="btn">Play Game</a>
+        </div>
+
+        <div class="game-card">
+            <div>
+                <h3>Mountain Climber</h3>
+                <p>An incremental game where you upgrade your strength to climb higher.</p>
+            </div>
+            <a href="climber.html" class="btn">Play Game</a>
+        </div>
+    </div>
+
+</body>
+</html>
